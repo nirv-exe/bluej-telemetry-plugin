@@ -4,6 +4,12 @@ import bluej.extensions2.event.CompileEvent;
 import bluej.extensions2.event.CompileListener;
 
 public class CompilationListener implements CompileListener{
+    private final TelemetryStorage storage; 
+
+    public CompilationListener(TelemetryStorage storage){
+        this.storage = storage;
+    }
+
     @Override
     public void compileStarted(CompileEvent event) {
     }
@@ -11,13 +17,14 @@ public class CompilationListener implements CompileListener{
     @Override
     public void compileSucceeded(CompileEvent event) {
         CompilationEvent success = CompilationEvent.successfulCompilation(); 
-
-        // TEMPORARY: Print to console instead of saving to storage
-        System.out.println("Recorded Successful Compilation at: " + success.getTimestamp());
+        storage.addEvent(success);
     }
 
     @Override
     public void compileFailed(CompileEvent event) {
+        // Tracks the overall failed attempt for your total_compilations metric
+        CompilationEvent compEvent = CompilationEvent.failedCompilation("COMPILE_ATTEMPT_FAILED", "The compilation process finished with errors.", -1);
+        storage.addEvent(compEvent);
     }
 
     @Override
@@ -30,6 +37,6 @@ public class CompilationListener implements CompileListener{
         int lineNum = event.getErrorLineNumber();
 
         CompilationEvent compEvent = CompilationEvent.failedCompilation(errorCode, errorMessage, lineNum);
-        System.out.println("Recorded Failed Compilation at: " + compEvent.getTimestamp());
+        storage.addEvent(compEvent);
     }
 }
