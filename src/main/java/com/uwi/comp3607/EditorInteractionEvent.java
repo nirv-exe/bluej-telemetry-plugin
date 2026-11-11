@@ -5,8 +5,8 @@ public class EditorInteractionEvent extends TelemetryEvent{
 
     private final String action;
 
-    public EditorInteractionEvent(String studentID, String action) {
-        super("EDITOR_INTERACTION", studentID);
+    public EditorInteractionEvent(String action) {
+        super("EDITOR_INTERACTION");
         this.action = action;
     }
 

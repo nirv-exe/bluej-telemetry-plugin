@@ -10,11 +10,9 @@ public class EditorInteractionEventTest {
 
     void shouldCreateEditorInteractionEvent(){
 
-        EditorInteractionEvent event = new EditorInteractionEvent("student001", "INSERT");
+        EditorInteractionEvent event = new EditorInteractionEvent("INSERT");
 
         assertEquals("EDITOR_INTERACTION", event.getEventType());
-        
-        assertEquals("student001", event.getStudentId());
 
         assertEquals("INSERT", event.getAction());
 
