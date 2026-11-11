@@ -8,7 +8,7 @@ public class CompilationEvent extends TelemetryEvent{
 
     //Private constructor so objects can only be created using factory methods
     private CompilationEvent(boolean success, String errorCode, String errorMessage, int affectedLineNumber){
-        super("COMPILATION", "0");
+        super("COMPILATION");
         this.success = success; 
         this.errorCode = errorCode;
         this.errorMessage = errorMessage; 
