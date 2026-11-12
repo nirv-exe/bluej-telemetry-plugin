@@ -6,11 +6,9 @@ import java.time.LocalDateTime;
 public abstract class TelemetryEvent {
     private final LocalDateTime timestamp;
     private final String eventType;
-    private final String studentID;
 
-    public TelemetryEvent(String eventType, String studentID){
+    public TelemetryEvent(String eventType){
         this.eventType = eventType;
-        this.studentID = studentID;
         timestamp = LocalDateTime.now();
     }
 
@@ -20,9 +18,5 @@ public abstract class TelemetryEvent {
 
     public String getEventType() {
         return eventType;
-    }
-
-    public String getStudentId() {
-        return studentID;
     }
 }

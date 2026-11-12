@@ -21,6 +21,10 @@ public class EditorActivityTracker {
 
     public void recordEdit(EditorInteractionEvent event) {
 
+        if(event == null){
+            throw new IllegalArgumentException("Event cannot be null");
+        }
+
         recordEdit(event, event.getTimestamp());
     }
 
@@ -75,4 +79,26 @@ public class EditorActivityTracker {
 
         return totalIdleSeconds;
     }
+
+    
+    // Average number of edits per minute
+    public double getEditFrequencyPerMinute() {
+
+        if (editTimes.size() < 2) {
+            return 0.0;
+        }
+
+        long totalMilliseconds = Duration.between(
+                editTimes.get(0),
+                editTimes.get(editTimes.size() - 1)).toMillis();
+
+        if (totalMilliseconds == 0) {
+            return 0.0;
+        }
+
+        double totalMinutes = totalMilliseconds / 60000.0;
+
+        return events.size() / totalMinutes;
+    }
+
 }
