@@ -4,6 +4,8 @@ import java.net.URL;
 import bluej.extensions2.BlueJ; // BlueJ API Libraries
 import bluej.extensions2.Extension;
 import bluej.extensions2.event.ClassListener;
+import bluej.extensions2.event.CompileEvent;
+import bluej.extensions2.event.CompileListener;
 import bluej.extensions2.event.PackageListener;
 
 public class TelemetryExtension extends Extension
@@ -18,8 +20,21 @@ public class TelemetryExtension extends Extension
     public void startup(BlueJ bluej){
         this.blueJ = bluej;
         this.storage = new TelemetryStorage();
+        ProjectLifecycleListener lifeCycleTracker = new ProjectLifecycleListener(storage);
 
+        bluej.addPackageListener(lifeCycleTracker);
         bluej.addCompileListener(new CompilationListener(storage));
+        bluej.addCompileListener(new CompileListener() {
+            @Override
+            public void compileStarted(CompileEvent event) {
+                lifeCycleTracker.checkForClassChanges();
+            }
+            // Ignore the rest for this specific trigger
+            @Override public void compileSucceeded(CompileEvent event) {}
+            @Override public void compileFailed(CompileEvent event) {}
+            @Override public void compileWarning(CompileEvent event) {}
+            @Override public void compileError(CompileEvent event) {}
+        });
         bluej.addInvocationFinishedListener(new ExecutionListener(storage));
 
         classListener = new ClassDataListener();
