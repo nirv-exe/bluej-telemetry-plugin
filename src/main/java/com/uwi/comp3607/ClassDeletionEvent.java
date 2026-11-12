@@ -4,9 +4,9 @@ public class ClassDeletionEvent extends TelemetryEvent
 {
     private String name;
 
-    public ClassDeletionEvent(String className, String studentID) 
+    public ClassDeletionEvent(String className) 
     {
-        super("Class Deleted", studentID);
+        super("Class Deleted");
         this.name = className;
     }
 

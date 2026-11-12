@@ -4,9 +4,9 @@ public class ClassModificationEvent extends TelemetryEvent
 {
     private String name;
 
-    public ClassModificationEvent(String className, String studentID) 
+    public ClassModificationEvent(String className) 
     {
-        super("Class Modified", studentID);
+        super("Class Modified");
         this.name = className;
     }
 

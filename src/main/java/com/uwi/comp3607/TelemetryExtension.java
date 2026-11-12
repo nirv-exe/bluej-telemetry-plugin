@@ -3,10 +3,14 @@ import java.net.URL;
 
 import bluej.extensions2.BlueJ; // BlueJ API Libraries
 import bluej.extensions2.Extension;
+import bluej.extensions2.event.ClassListener;
+import bluej.extensions2.event.PackageListener;
 
 public class TelemetryExtension extends Extension
 {
     private BlueJ blueJ;
+    private ClassListener classListener;
+    private PackageListener projectListener;
     private TelemetryStorage storage; 
 
     // When this is called, the extension begin to work

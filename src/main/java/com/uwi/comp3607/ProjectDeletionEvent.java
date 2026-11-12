@@ -4,9 +4,9 @@ public class ProjectDeletionEvent extends TelemetryEvent
 {
     private String name;
 
-    public ProjectDeletionEvent(String className, String studentID) 
+    public ProjectDeletionEvent(String className) 
     {
-        super("Project Deleted", studentID);
+        super("Project Deleted");
         this.name = className;
     }
 

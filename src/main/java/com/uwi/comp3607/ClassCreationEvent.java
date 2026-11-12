@@ -4,9 +4,9 @@ public class ClassCreationEvent extends TelemetryEvent
 {
     private final String name;
 
-    public ClassCreationEvent(String name, String studentId)
+    public ClassCreationEvent(String name)
     {
-        super("Class Created", studentId);
+        super("Class Created");
         this.name = name;
     }
     public String getName()
