@@ -37,7 +37,7 @@ public class TelemetryExtension extends Extension
         });
         bluej.addInvocationFinishedListener(new ExecutionListener(storage));
 
-        classListener = new ClassDataListener();
+        classListener = new ClassDataListener(storage);
         blueJ.addClassListener(classListener);
 
         // TODO: Instantiate and register event listeners here
