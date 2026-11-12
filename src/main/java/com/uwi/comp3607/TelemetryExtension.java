@@ -40,8 +40,6 @@ public class TelemetryExtension extends Extension
         classListener = new ClassDataListener();
         blueJ.addClassListener(classListener);
 
-        projectListener = new ProjectDataListener();
-        blueJ.addPackageListener(projectListener);
         // TODO: Instantiate and register event listeners here
         // e.g., bluej.addClassListener(new ProjectLifecycleListener());
 
