@@ -30,7 +30,6 @@ public class ClassDataListenerTest {
         when(classMock.getName()).thenReturn("Class");
         when(event.isClassCompiled()).thenReturn(false);
 
-        // Simulate a class being modified.
         listener.classStateChanged(event);
 
         var events = storage.getEventAndClear();
