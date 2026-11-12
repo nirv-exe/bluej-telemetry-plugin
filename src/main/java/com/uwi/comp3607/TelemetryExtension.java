@@ -7,13 +7,16 @@ import bluej.extensions2.Extension;
 public class TelemetryExtension extends Extension
 {
     private BlueJ blueJ;
-    private ClassDataListener classListener;
-    private ProjectDataListener projectListener;
+    private TelemetryStorage storage; 
 
     // When this is called, the extension begin to work
     @Override 
     public void startup(BlueJ bluej){
         this.blueJ = bluej;
+        this.storage = new TelemetryStorage();
+
+        bluej.addCompileListener(new CompilationListener(storage));
+        bluej.addInvocationFinishedListener(new ExecutionListener(storage));
 
         classListener = new ClassDataListener();
         blueJ.addClassListener(classListener);
