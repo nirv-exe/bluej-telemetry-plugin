@@ -1,5 +1,6 @@
 package com.uwi.comp3607;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import bluej.extensions2.BPackage;
@@ -31,11 +32,24 @@ public class ExportPackageListener implements PackageListener {
             System.out.println("Could not resolve project name.");
         }
 
-        List<TelemetryEvent> sessionEvents = storage.getEventAndClear();
-        if (!sessionEvents.isEmpty() && exporters != null) {
+        List<TelemetryEvent> sessionEvents = storage.getEvents();
+
+        if (sessionEvents.isEmpty() || exporters == null || exporters.isEmpty()) {
+            return;
+        }
+
+        try {
             for (TelemetryExporter exporter : exporters) {
                 exporter.export(sessionEvents, projectName);
             }
+
+            // Clear only after every exporter succeeds
+            storage.clearEvents();
+
+        } catch (RuntimeException e) {
+            System.err.println(
+                "Telemetry export failed: " + e.getMessage()
+            );
         }
     }
 }

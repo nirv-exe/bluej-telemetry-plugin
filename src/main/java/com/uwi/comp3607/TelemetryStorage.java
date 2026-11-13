@@ -21,4 +21,14 @@ public class TelemetryStorage {
         return snapshot;
     }
 
+    // Returns a copy without clearing stored events
+    public List<TelemetryEvent> getEvents() {
+        return new ArrayList<>(eventList);
+    }
+
+    // Clears the stored events
+    public void clearEvents() {
+        eventList.clear();
+    }
+
 }

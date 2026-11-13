@@ -101,5 +101,38 @@ public class EditorActivityTrackerTest {
         assertThrows(IllegalArgumentException.class, () -> tracker.recordEdit(new EditorInteractionEvent("DELETE"), start.minusSeconds(5)));
     }
 
+    @Test
+    void shouldCalculateEditingDuration() {
 
+        EditorActivityTracker tracker =
+            new EditorActivityTracker();
+
+        LocalDateTime start =
+            LocalDateTime.of(2026, 11, 13, 10, 0);
+
+        tracker.recordEdit(
+            new EditorInteractionEvent("INSERT"), start);
+
+        tracker.recordEdit(
+            new EditorInteractionEvent("INSERT"),
+            start.plusSeconds(10));
+
+        tracker.recordEdit(
+            new EditorInteractionEvent("DELETE"),
+            start.plusSeconds(60));
+
+        assertEquals(60, tracker.getEditingDurationSeconds());
+    }
+
+    @Test
+    void shouldReturnZeroDurationWithOneEdit() {
+
+        EditorActivityTracker tracker =
+            new EditorActivityTracker();
+
+        tracker.recordEdit(
+            new EditorInteractionEvent("INSERT"));
+
+        assertEquals(0, tracker.getEditingDurationSeconds());
+    }
 }

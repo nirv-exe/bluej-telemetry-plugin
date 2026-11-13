@@ -2,7 +2,7 @@ package com.uwi.comp3607;
 
 public class ClassModificationEvent extends TelemetryEvent
 {
-    private String name;
+    private final String name;
 
     public ClassModificationEvent(String className) 
     {
@@ -15,6 +15,7 @@ public class ClassModificationEvent extends TelemetryEvent
         return name;
     }
 
+    @Override 
     public String output() 
     {
         return "Class (" + this.getName() + ") modified.";

@@ -62,4 +62,20 @@ public class EditorDocumentListenerTest {
 
         assertEquals(0, tracker.getEditCount());
     }
+
+    @Test
+    void shouldRecordCorrectEditAction() {
+        EditorActivityTracker tracker = new EditorActivityTracker();
+        TelemetryStorage storage = new TelemetryStorage();
+
+        EditorDocumentListener listener =
+            new EditorDocumentListener(tracker, storage);
+
+        listener.textReplaced(0, "", "hello", 0, 0);
+
+        TelemetryEvent event =
+            storage.getEventAndClear().get(0);
+
+        assertEquals("Editor action: INSERT", event.output());
+    }
 }

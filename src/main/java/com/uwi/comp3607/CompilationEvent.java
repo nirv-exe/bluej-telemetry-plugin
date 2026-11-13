@@ -1,5 +1,8 @@
 package com.uwi.comp3607;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CompilationEvent extends TelemetryEvent{
     private final boolean success;
     private final String errorCode;
@@ -36,5 +39,45 @@ public class CompilationEvent extends TelemetryEvent{
             return "Compilation succeeded.";
         }
         return "Compilation failed [" + errorCode + "] at line " + affectedLineNumber + ": " + errorMessage;
+    }
+
+        @Override
+    public boolean isSuccessfulCompilation() {
+        return success;
+    }
+
+    @Override
+    public boolean isFailedCompilationAttempt() {
+        return !success &&
+            "COMPILE_ATTEMPT_FAILED".equals(errorCode);
+    }
+
+    @Override
+    public boolean isCompilationError() {
+        return !success &&
+            !"COMPILE_ATTEMPT_FAILED".equals(errorCode);
+    }
+
+
+    @Override
+    public Map<String, Object> getAdditionalDetails() {
+
+        Map<String, Object> details = new HashMap<String, Object>();
+
+        details.put("success", success);
+
+        if (errorCode != null) {
+            details.put("errorCode", errorCode);
+        }
+
+        if (errorMessage != null) {
+            details.put("errorMessage", errorMessage);
+        }
+
+        if (affectedLineNumber >= 0) {
+            details.put("affectedLineNumber", affectedLineNumber);
+        }
+
+        return details;
     }
 }

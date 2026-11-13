@@ -1,10 +1,12 @@
 package com.uwi.comp3607;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import bluej.extensions2.BClass;
 import bluej.extensions2.event.ClassEvent;
@@ -41,6 +43,21 @@ public class ClassDataListenerTest {
 
         assertEquals("Class", modifiedEvent.getName());
         assertEquals("Class (Class) modified.",modifiedEvent.output());
+    }
+
+    @Test
+    public void testCompiledClassIsNotRecordedAsModified() {
+
+        BClass classMock = mock(BClass.class);
+        ClassEvent event = mock(ClassEvent.class);
+
+        when(event.getBClass()).thenReturn(classMock);
+        when(classMock.getName()).thenReturn("Student");
+        when(event.isClassCompiled()).thenReturn(true);
+
+        listener.classStateChanged(event);
+
+        assertTrue(storage.getEventAndClear().isEmpty());
     }
 }
 
