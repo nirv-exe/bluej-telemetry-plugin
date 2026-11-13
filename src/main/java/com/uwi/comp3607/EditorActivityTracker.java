@@ -48,6 +48,19 @@ public class EditorActivityTracker {
         return events.size();
     }
 
+    // Duration between the first and last recorded edit
+    public long getEditingDurationSeconds() {
+
+        if (editTimes.size() < 2) {
+            return 0;
+        }
+
+        LocalDateTime start = editTimes.get(0);
+        LocalDateTime end = editTimes.get(editTimes.size() - 1);
+
+        return Duration.between(start, end).getSeconds();
+    }
+
     // Average seconds between editing events
     public double getAverageEditIntervalSeconds() {
 
@@ -101,4 +114,5 @@ public class EditorActivityTracker {
         return events.size() / totalMinutes;
     }
 
+    
 }

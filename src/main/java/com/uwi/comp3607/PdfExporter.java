@@ -1,7 +1,10 @@
 package com.uwi.comp3607;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -17,6 +20,7 @@ public class PdfExporter implements TelemetryExporter {
             return;
         }
 
+        TelemetryReportAggregator summary = new TelemetryReportAggregator(events);
         String fileName = projectName + "_Telemetry.pdf";
 
         try (PDDocument document = new PDDocument()) {
@@ -26,43 +30,137 @@ public class PdfExporter implements TelemetryExporter {
             PDType1Font titleFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
             PDType1Font bodyFont = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+            PDPageContentStream contentStream = new PDPageContentStream(document, page);
+            try {
                 contentStream.beginText();
                 contentStream.setFont(titleFont, 16);
                 contentStream.newLineAtOffset(50, 750);
                 contentStream.showText("Telemetry Report: " + projectName);
 
-                contentStream.setFont(bodyFont, 10);
+                contentStream.setFont(titleFont, 11);
                 contentStream.setLeading(14.5f);
                 contentStream.newLine();
                 contentStream.newLine();
+                contentStream.showText("Session Summary Metrics");
+                contentStream.newLine();
 
-                contentStream.showText("Total Events Recorded: " + events.size());
+                contentStream.setFont(bodyFont, 10);
+                contentStream.showText("Total Events Recorded: " + summary.getTotalEvents()
+                        + " | Total Session Duration: " + summary.getTotalSessionSeconds() + "s");
+                contentStream.newLine();
+                contentStream.showText("Active Coding Time: " + summary.getActiveTimeSeconds()
+                        + "s | Idle Time: " + summary.getIdleTimeSeconds() + "s");
+                contentStream.newLine();
+                contentStream.showText(String.format(
+                        "Compilation Attempts: %d | Success Rate: %.1f%% | Syntax Errors Logged: %d",
+                        summary.getTotalCompilations(), summary.getCompileSuccessRate(), summary.getCompilationErrors()));
                 contentStream.newLine();
                 contentStream.newLine();
+
+
+                contentStream.setFont(titleFont, 11);
+                contentStream.showText("Compilation Error Breakdown");
+                contentStream.newLine();
+
+                contentStream.setFont(bodyFont, 10);
+
+                Map<String, Integer> errorCounts = new HashMap<>();
+
+                for (TelemetryEvent event : events) {
+
+                    if (event.isCompilationError()) {
+
+                        Object code = event.getAdditionalDetails().get("errorCode");
+
+                        String errorCode = (code == null) ? "UNKNOWN" : code.toString();
+
+                        if (errorCounts.containsKey(errorCode)) {
+                            errorCounts.put(errorCode, errorCounts.get(errorCode) + 1);
+                        } else {
+                            errorCounts.put(errorCode, 1);
+                        }
+                    }
+                }
+
+                if (errorCounts.isEmpty()) {
+                    contentStream.showText("No compilation errors recorded.");
+                    contentStream.newLine();
+                } else {
+                    for (String errorCode : errorCounts.keySet()) {
+                        contentStream.showText(errorCode + ": " + errorCounts.get(errorCode));
+                        contentStream.newLine();
+                    }
+                }
+
+                contentStream.newLine();
+
+
+                contentStream.setFont(titleFont, 11);
+                contentStream.showText("Event Timeline & Class Progression");
+                contentStream.newLine();
+                contentStream.setFont(bodyFont, 10);
 
                 int lineCount = 0;
+                int maxLines = 20;
+
                 for (TelemetryEvent event : events) {
-                    if (lineCount >= 40) {
-                        break; // Prevents writing off the bottom of a single page
+
+                    // Create another page when the current one is full
+                    if (lineCount >= maxLines) {
+
+                        contentStream.endText();
+                        contentStream.close();
+
+                        page = new PDPage();
+                        document.addPage(page);
+
+                        contentStream =
+                            new PDPageContentStream(document, page);
+
+                        contentStream.beginText();
+                        contentStream.setFont(bodyFont, 10);
+                        contentStream.setLeading(14.5f);
+                        contentStream.newLineAtOffset(50, 750);
+
+                        lineCount = 0;
+                        maxLines = 40;
                     }
-                    String rawLine = "[" + event.getEventType() + "] " + event.output();
-                    // Sanitize newlines and long strings for PDF rendering
-                    String cleanLine = rawLine.replace("\n", " ").replace("\r", " ");
+
+                    String eventType = event.getEventType();
+
+                    if (eventType.equals("LIFECYCLE") ||
+                            eventType.equals("Class Modified")) {
+                        eventType = "CLASS";
+                    }
+
+                    String rawLine =
+                        "[" + event.getTimestamp() + "] "
+                        + "[" + eventType + "] "
+                        + event.output();
+
+                    String cleanLine = rawLine.replace("\n", " ")
+                        .replace("\r", " ");
+
                     if (cleanLine.length() > 95) {
                         cleanLine = cleanLine.substring(0, 92) + "...";
                     }
+
                     contentStream.showText(cleanLine);
                     contentStream.newLine();
+
                     lineCount++;
                 }
 
+
+
                 contentStream.endText();
+            } finally {
+                contentStream.close();
             }
 
             document.save(fileName);
         } catch (IOException e) {
-            System.err.println("Failed to export PDF telemetry: " + e.getMessage());
+            throw new UncheckedIOException("Failed to export PDF telemetry", e);
         }
     }
 }

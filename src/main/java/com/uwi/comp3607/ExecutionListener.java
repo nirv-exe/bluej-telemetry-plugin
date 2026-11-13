@@ -10,21 +10,54 @@ public class ExecutionListener implements InvocationFinishedListener{
         this.storage = storage;
     }
 
-    @Override 
-    public void invocationFinished(InvocationFinishedEvent event){
-        boolean crashed = (event.getEventType() == InvocationFinishedEvent.EventType.EXCEPTION_EXIT);
+    
+    @Override
+    public void invocationFinished(InvocationFinishedEvent event) {
+
         String methodName = event.getMethodName();
-        String outputSummary = "Console Output Captured for " + methodName;
+
+        if (methodName == null) {
+            methodName = "Constructor";
+        }
+
+        String outputSummary = "Method: " + methodName;
 
         ExecutionEvent execEvent;
 
-        if(!crashed){
-            execEvent = ExecutionEvent.successfulExecution(outputSummary);
+        if (event.getEventType() ==
+                InvocationFinishedEvent.EventType.NORMAL_EXIT) {
+
+            Object result = event.getResult();
+
+            if (result != null) {
+                outputSummary += " | Return value: " + result;
+            } else {
+                outputSummary += " | No return value";
+            }
+
+            execEvent =
+                ExecutionEvent.successfulExecution(outputSummary);
+
         } else {
-            String exceptionDetails = "Runtime Exception occured in method: " + methodName;
-            execEvent = ExecutionEvent.failedExecution(exceptionDetails, outputSummary);
+
+            String exceptionDetails;
+
+            if (event.getEventType() ==
+                    InvocationFinishedEvent.EventType.EXCEPTION_EXIT) {
+                exceptionDetails =
+                    "Runtime exception in: " + methodName;
+            } else {
+                exceptionDetails =
+                    "Execution did not finish normally: " + methodName;
+            }
+
+            execEvent = ExecutionEvent.failedExecution(
+                exceptionDetails,
+                outputSummary
+            );
         }
 
         storage.addEvent(execEvent);
     }
+
 }

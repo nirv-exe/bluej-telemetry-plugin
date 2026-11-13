@@ -42,7 +42,7 @@ public class ExecutionListenerTest {
         // Cast the base TelemetryEvent to an ExecutionEvent to check specific fields
         ExecutionEvent capturedEvent = (ExecutionEvent) events.get(0);
         assertTrue(capturedEvent.getSuccess());
-        assertEquals("Console Output Captured for calculateFare", capturedEvent.getConsoleOutputSummary());
+        assertEquals("Method: calculateFare | No return value", capturedEvent.getConsoleOutputSummary());
     }
 
     @Test
@@ -61,6 +61,30 @@ public class ExecutionListenerTest {
         ExecutionEvent capturedEvent = (ExecutionEvent) events.get(0);
         
         assertFalse(capturedEvent.getSuccess());
-        assertEquals("Runtime Exception occured in method: divideByZero", capturedEvent.getExceptionThrown());
+        assertEquals("Runtime exception in: divideByZero", capturedEvent.getExceptionThrown());
+    }
+
+
+    @Test
+    public void testTerminatedInvocationIsNotSuccessful() {
+
+        InvocationFinishedEvent mockEvent =
+            mock(InvocationFinishedEvent.class);
+
+        when(mockEvent.getEventType()).thenReturn(
+            InvocationFinishedEvent.EventType.TERMINATED_EXIT
+        );
+
+        when(mockEvent.getMethodName()).thenReturn("main");
+
+        listener.invocationFinished(mockEvent);
+
+        List<TelemetryEvent> events =
+            storage.getEventAndClear();
+
+        ExecutionEvent capturedEvent =
+            (ExecutionEvent) events.get(0);
+
+        assertFalse(capturedEvent.getSuccess());
     }
 }

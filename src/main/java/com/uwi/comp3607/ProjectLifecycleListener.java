@@ -12,18 +12,11 @@ public class ProjectLifecycleListener implements PackageListener {
     private final TelemetryStorage storage;
     private List<String> knownClasses; 
     private BPackage activePackage;
-    private EditorDocumentListener editorListener;
 
     public ProjectLifecycleListener(TelemetryStorage storage) {
         this.storage = storage;
         this.knownClasses = new ArrayList<>();
     }
-
-    public ProjectLifecycleListener(TelemetryStorage storage, EditorDocumentListener editorListener) {
-
-        this(storage);
-        this.editorListener = editorListener;
-}
 
     @Override
     public void packageOpened(PackageEvent event) {
