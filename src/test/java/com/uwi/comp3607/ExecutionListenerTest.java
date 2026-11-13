@@ -52,6 +52,7 @@ public class ExecutionListenerTest {
         
         when(mockEvent.getEventType()).thenReturn(InvocationFinishedEvent.EventType.EXCEPTION_EXIT);
         when(mockEvent.getMethodName()).thenReturn("divideByZero");
+        when(mockEvent.getClassName()).thenReturn("Calculator");
 
         // 2. Act
         listener.invocationFinished(mockEvent);
@@ -61,9 +62,8 @@ public class ExecutionListenerTest {
         ExecutionEvent capturedEvent = (ExecutionEvent) events.get(0);
         
         assertFalse(capturedEvent.getSuccess());
-        assertEquals("Runtime exception in: divideByZero", capturedEvent.getExceptionThrown());
+        assertEquals("Runtime exception in class Calculator, method divideByZero", capturedEvent.getExceptionThrown());
     }
-
 
     @Test
     public void testTerminatedInvocationIsNotSuccessful() {

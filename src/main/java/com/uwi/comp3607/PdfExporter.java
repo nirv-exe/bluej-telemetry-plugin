@@ -2,6 +2,7 @@ package com.uwi.comp3607;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,15 +46,11 @@ public class PdfExporter implements TelemetryExporter {
                 contentStream.newLine();
 
                 contentStream.setFont(bodyFont, 10);
-                contentStream.showText("Total Events Recorded: " + summary.getTotalEvents()
-                        + " | Total Session Duration: " + summary.getTotalSessionSeconds() + "s");
+                contentStream.showText("Total Events Recorded: " + summary.getTotalEvents() + " | Total Session Duration: " + summary.getTotalSessionSeconds()+ "s");
                 contentStream.newLine();
-                contentStream.showText("Active Coding Time: " + summary.getActiveTimeSeconds()
-                        + "s | Idle Time: " + summary.getIdleTimeSeconds() + "s");
+                contentStream.showText("Active Coding Time: " + summary.getActiveTimeSeconds() + "s | Idle Time: " + summary.getIdleTimeSeconds() + "s");
                 contentStream.newLine();
-                contentStream.showText(String.format(
-                        "Compilation Attempts: %d | Success Rate: %.1f%% | Syntax Errors Logged: %d",
-                        summary.getTotalCompilations(), summary.getCompileSuccessRate(), summary.getCompilationErrors()));
+                contentStream.showText(String.format("Compilation Attempts: %d | Success Rate: %.1f%% | Compilation Errors Logged: %d", summary.getTotalCompilations(), summary.getCompileSuccessRate(), summary.getCompilationErrors()));
                 contentStream.newLine();
                 contentStream.newLine();
 
@@ -94,66 +91,66 @@ public class PdfExporter implements TelemetryExporter {
 
                 contentStream.newLine();
 
+                contentStream.endText();
+                contentStream.close();
 
-                contentStream.setFont(titleFont, 11);
-                contentStream.showText("Event Timeline & Class Progression");
-                contentStream.newLine();
-                contentStream.setFont(bodyFont, 10);
+                // Create the second and final page
+                page = new PDPage();
+                document.addPage(page);
 
-                int lineCount = 0;
-                int maxLines = 20;
+                contentStream = new PDPageContentStream(document, page);
+
+                // Draw timeline heading
+                contentStream.beginText();
+                contentStream.setFont(titleFont, 16);
+                contentStream.newLineAtOffset(50, 750);
+                contentStream.showText("Class Creation Timeline");
+                contentStream.endText();
+
+                // Draw vertical timeline line
+                contentStream.setLineWidth(2);
+                contentStream.moveTo(75, 700);
+                contentStream.lineTo(75, 130);
+                contentStream.stroke();
+
+                int yPosition = 680;
+                int displayedEvents = 0;
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
                 for (TelemetryEvent event : events) {
 
-                    // Create another page when the current one is full
-                    if (lineCount >= maxLines) {
+                    if (event.isClassCreation() && displayedEvents < 12) {
 
-                        contentStream.endText();
-                        contentStream.close();
+                        // Draw a small marker on the timeline
+                        contentStream.addRect(71, yPosition - 4, 8, 8);
+                        contentStream.fill();
 
-                        page = new PDPage();
-                        document.addPage(page);
+                        // Display the timestamp and event
+                        String description = event.output();
 
-                        contentStream =
-                            new PDPageContentStream(document, page);
+                        if (description.length() > 55) {
+                            description = description.substring(0, 52) + "...";
+                        }
 
                         contentStream.beginText();
                         contentStream.setFont(bodyFont, 10);
-                        contentStream.setLeading(14.5f);
-                        contentStream.newLineAtOffset(50, 750);
+                        contentStream.newLineAtOffset(95, yPosition);
+                        contentStream.showText(event.getTimestamp().format(formatter) + " - " + description);
+                        contentStream.endText();
 
-                        lineCount = 0;
-                        maxLines = 40;
+                        yPosition -= 45;
+                        displayedEvents++;
                     }
-
-                    String eventType = event.getEventType();
-
-                    if (eventType.equals("LIFECYCLE") ||
-                            eventType.equals("Class Modified")) {
-                        eventType = "CLASS";
-                    }
-
-                    String rawLine =
-                        "[" + event.getTimestamp() + "] "
-                        + "[" + eventType + "] "
-                        + event.output();
-
-                    String cleanLine = rawLine.replace("\n", " ")
-                        .replace("\r", " ");
-
-                    if (cleanLine.length() > 95) {
-                        cleanLine = cleanLine.substring(0, 92) + "...";
-                    }
-
-                    contentStream.showText(cleanLine);
-                    contentStream.newLine();
-
-                    lineCount++;
                 }
 
-
-
-                contentStream.endText();
+                if (displayedEvents == 0) {
+                    contentStream.beginText();
+                    contentStream.setFont(bodyFont, 10);
+                    contentStream.newLineAtOffset(95, 680);
+                    contentStream.showText("No class creation events recorded.");
+                    contentStream.endText();
+                }
             } finally {
                 contentStream.close();
             }

@@ -33,4 +33,9 @@ public class LifecycleEvent extends TelemetryEvent {
     public String output() {
         return "Lifecycle action: " + action + " on class " + className;
     }
+
+    @Override
+    public boolean isClassCreation() {
+        return action.equals("CLASS_CREATED");
+    }
 }

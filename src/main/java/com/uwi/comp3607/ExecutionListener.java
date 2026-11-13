@@ -39,16 +39,18 @@ public class ExecutionListener implements InvocationFinishedListener{
                 ExecutionEvent.successfulExecution(outputSummary);
 
         } else {
-
             String exceptionDetails;
 
-            if (event.getEventType() ==
-                    InvocationFinishedEvent.EventType.EXCEPTION_EXIT) {
-                exceptionDetails =
-                    "Runtime exception in: " + methodName;
+            if (event.getEventType() == InvocationFinishedEvent.EventType.EXCEPTION_EXIT) {
+                String className = event.getClassName();
+
+                if (className == null) {
+                    className = "Unknown";
+                }
+
+                exceptionDetails = "Runtime exception in class " + className + ", method " + methodName;
             } else {
-                exceptionDetails =
-                    "Execution did not finish normally: " + methodName;
+                exceptionDetails = "Execution did not finish normally: " + methodName;
             }
 
             execEvent = ExecutionEvent.failedExecution(
