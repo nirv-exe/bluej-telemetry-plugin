@@ -1,12 +1,8 @@
 package com.uwi.comp3607;
 import java.net.URL;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
 
 import bluej.extensions2.BlueJ; // BlueJ API Libraries
 import bluej.extensions2.Extension;
-import bluej.extensions2.editor.JavaEditor;
 import bluej.extensions2.event.ClassListener;
 import bluej.extensions2.event.CompileEvent;
 import bluej.extensions2.event.CompileListener;
@@ -19,10 +15,8 @@ public class TelemetryExtension extends Extension
     private ClassListener classListener;
     private PackageListener projectListener;
     private TelemetryStorage storage;
-    private EditorActivityTracker editorTracker;
-    private EditorDocumentListener editorListener;
-
-    private final Set<JavaEditor> trackedEditors = Collections.newSetFromMap(new IdentityHashMap<JavaEditor, Boolean>());
+    private EditorRegistrationListener editorRegistrationListener;
+    
 
     // When this is called, the extension begin to work
     @Override 
@@ -30,19 +24,22 @@ public class TelemetryExtension extends Extension
         this.blueJ = bluej;
         this.storage = new TelemetryStorage();
 
-        // Editor interaction tracking
-        editorTracker = new EditorActivityTracker();
-        editorListener = new EditorDocumentListener(editorTracker, storage);
-
         ProjectLifecycleListener lifeCycleTracker = new ProjectLifecycleListener(storage);
+
         this.projectListener = lifeCycleTracker;
 
+        editorRegistrationListener = new EditorRegistrationListener(storage);
+
+        blueJ.removePackageListener(editorRegistrationListener);
+        bluej.addPackageListener(lifeCycleTracker);
+        bluej.addPackageListener(editorRegistrationListener);
         bluej.addPackageListener(lifeCycleTracker);
         bluej.addCompileListener(new CompilationListener(storage));
         bluej.addCompileListener(new CompileListener() {
             @Override
             public void compileStarted(CompileEvent event) {
                 lifeCycleTracker.checkForClassChanges();
+                editorRegistrationListener.checkForEditors();
             }
             // Ignore the rest for this specific trigger
             @Override public void compileSucceeded(CompileEvent event) {}
@@ -80,6 +77,7 @@ public class TelemetryExtension extends Extension
     public void terminate(){
         blueJ.removeClassListener(classListener);
         blueJ.removePackageListener(projectListener);
+        blueJ.removePackageListener(editorRegistrationListener);
         System.out.println("BlueJ Telemetry Plugin Stopped");
     }
 
