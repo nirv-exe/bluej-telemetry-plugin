@@ -1,26 +1,41 @@
 package com.uwi.comp3607;
 import java.net.URL;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 import bluej.extensions2.BlueJ; // BlueJ API Libraries
 import bluej.extensions2.Extension;
+import bluej.extensions2.editor.JavaEditor;
 import bluej.extensions2.event.ClassListener;
 import bluej.extensions2.event.CompileEvent;
 import bluej.extensions2.event.CompileListener;
 import bluej.extensions2.event.PackageListener;
+
 
 public class TelemetryExtension extends Extension
 {
     private BlueJ blueJ;
     private ClassListener classListener;
     private PackageListener projectListener;
-    private TelemetryStorage storage; 
+    private TelemetryStorage storage;
+    private EditorActivityTracker editorTracker;
+    private EditorDocumentListener editorListener;
+
+    private final Set<JavaEditor> trackedEditors = Collections.newSetFromMap(new IdentityHashMap<JavaEditor, Boolean>());
 
     // When this is called, the extension begin to work
     @Override 
     public void startup(BlueJ bluej){
         this.blueJ = bluej;
         this.storage = new TelemetryStorage();
+
+        // Editor interaction tracking
+        editorTracker = new EditorActivityTracker();
+        editorListener = new EditorDocumentListener(editorTracker, storage);
+
         ProjectLifecycleListener lifeCycleTracker = new ProjectLifecycleListener(storage);
+        this.projectListener = lifeCycleTracker;
 
         bluej.addPackageListener(lifeCycleTracker);
         bluej.addCompileListener(new CompilationListener(storage));

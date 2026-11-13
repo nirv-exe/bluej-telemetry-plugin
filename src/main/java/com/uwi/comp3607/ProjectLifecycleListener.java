@@ -1,21 +1,29 @@
 package com.uwi.comp3607;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import bluej.extensions2.BClass;
 import bluej.extensions2.BPackage;
 import bluej.extensions2.event.PackageEvent;
 import bluej.extensions2.event.PackageListener;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ProjectLifecycleListener implements PackageListener {
     private final TelemetryStorage storage;
     private List<String> knownClasses; 
     private BPackage activePackage;
+    private EditorDocumentListener editorListener;
 
     public ProjectLifecycleListener(TelemetryStorage storage) {
         this.storage = storage;
         this.knownClasses = new ArrayList<>();
     }
+
+    public ProjectLifecycleListener(TelemetryStorage storage, EditorDocumentListener editorListener) {
+
+        this(storage);
+        this.editorListener = editorListener;
+}
 
     @Override
     public void packageOpened(PackageEvent event) {
