@@ -28,4 +28,9 @@ public class LifecycleEvent extends TelemetryEvent {
     public String getClassName() { 
         return className; 
     }
+
+    @Override
+    public String output() {
+        return "Lifecycle action: " + action + " on class " + className;
+    }
 }

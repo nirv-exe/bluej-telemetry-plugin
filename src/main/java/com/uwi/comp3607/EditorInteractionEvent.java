@@ -1,8 +1,6 @@
 package com.uwi.comp3607;
 
 public class EditorInteractionEvent extends TelemetryEvent{
-
-
     private final String action;
 
     public EditorInteractionEvent(String action) {
@@ -14,4 +12,8 @@ public class EditorInteractionEvent extends TelemetryEvent{
         return action;
     }
 
+    @Override
+    public String output() {
+        return "Editor action: " + action;
+    }
 }

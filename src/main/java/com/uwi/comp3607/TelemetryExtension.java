@@ -34,6 +34,12 @@ public class TelemetryExtension extends Extension
         bluej.addPackageListener(lifeCycleTracker);
         bluej.addPackageListener(editorRegistrationListener);
         bluej.addPackageListener(lifeCycleTracker);
+        
+        List<TelemetryExporter> exporters = new ArrayList<>();
+        exporters.add(new JsonExporter());
+        exporters.add(new PdfExporter());
+        bluej.addPackageListener(new ExportPackageListener(storage, exporters));
+
         bluej.addCompileListener(new CompilationListener(storage));
         bluej.addCompileListener(new CompileListener() {
             @Override

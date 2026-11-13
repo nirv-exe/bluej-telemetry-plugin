@@ -34,4 +34,12 @@ public class ExecutionEvent extends TelemetryEvent{
     public String  getConsoleOutputSummary(){
         return this.consoleOutput;
     }
+
+    @Override
+    public String output() {
+        if (success) {
+            return "Execution succeeded: " + consoleOutput;
+        }
+        return "Execution failed (" + exceptionThrown + "): " + consoleOutput;
+    }
 }
