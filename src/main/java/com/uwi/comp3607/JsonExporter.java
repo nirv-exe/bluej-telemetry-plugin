@@ -19,6 +19,8 @@ public class JsonExporter implements TelemetryExporter {
 
         TelemetryReportAggregator summary = new TelemetryReportAggregator(events);
 
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
         JsonObject root = new JsonObject();
         root.addProperty("studentId", "STUDENT_PLACEHOLDER");
         root.addProperty("projectName", projectName);
@@ -26,9 +28,8 @@ public class JsonExporter implements TelemetryExporter {
         root.addProperty("activeCodingTimeSeconds", summary.getActiveTimeSeconds());
         root.addProperty("idleTimeSeconds", summary.getIdleTimeSeconds());
         root.addProperty("totalCompilationAttempts", summary.getTotalCompilations());
-        root.addProperty("compileSuccessRatePercent", summary.getCompileSuccessRate());
-        
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        root.addProperty("compileSuccessRatePercent", summary.getCompileSuccessRate());        
+        root.add("compilationIntervalsSeconds", gson.toJsonTree(summary.getCompilationIntervals()));
         
         JsonArray jsonArray = new JsonArray();
         

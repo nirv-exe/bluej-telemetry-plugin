@@ -36,6 +36,10 @@ public abstract class TelemetryEvent {
         return false;
     }
 
+    public boolean isClassCreation() {
+        return false;
+    }
+
     public Map<String, Object> getAdditionalDetails() {
         return new HashMap<String, Object>();
     }

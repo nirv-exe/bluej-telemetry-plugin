@@ -2,6 +2,7 @@ package com.uwi.comp3607;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TelemetryReportAggregator {
@@ -13,10 +14,12 @@ public class TelemetryReportAggregator {
     private final long totalSessionSeconds;
     private final long idleTimeSeconds;
     private final long activeTimeSeconds;
+    private final List<Long> compilationIntervals;
 
     public TelemetryReportAggregator(List<TelemetryEvent> events) {
         this.totalEvents = (events == null) ? 0 : events.size();
-
+        compilationIntervals = new ArrayList<>();
+        LocalDateTime previousCompilationTime = null;
         int compSuccess = 0;
         int compFailedAttempts = 0;
         int syntaxErrors = 0;
@@ -30,6 +33,23 @@ public class TelemetryReportAggregator {
                     compFailedAttempts++;
                 } else if (event.isCompilationError()) {
                     syntaxErrors++;
+                }
+
+                if (event.isSuccessfulCompilation() || event.isFailedCompilationAttempt()) {
+
+                    LocalDateTime currentTime = event.getTimestamp();
+
+                    if (previousCompilationTime != null) {
+
+                        long interval = Duration.between(
+                            previousCompilationTime,
+                            currentTime
+                        ).getSeconds();
+
+                        compilationIntervals.add(interval);
+                    }
+
+                    previousCompilationTime = currentTime;
                 }
 
                 if ("EDITOR_INTERACTION".equals(event.getEventType())) {
@@ -67,4 +87,5 @@ public class TelemetryReportAggregator {
     public long getTotalSessionSeconds() { return totalSessionSeconds; }
     public long getIdleTimeSeconds() { return idleTimeSeconds; }
     public long getActiveTimeSeconds() { return activeTimeSeconds; }
+    public List<Long> getCompilationIntervals() { return new ArrayList<>(compilationIntervals); }
 }

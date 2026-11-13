@@ -187,51 +187,14 @@ public class TelemetryExporterTest {
         }
     }
 
-
     @Test
-    void testPdfContainsClassActivityTimeline() throws Exception {
-
-        PdfExporter exporter = new PdfExporter();
-
-        List<TelemetryEvent> events = List.of(
-            LifecycleEvent.classCreated("Student"),
-            new ClassModificationEvent("Student"),
-            CompilationEvent.successfulCompilation()
-        );
-
-        exporter.export(events, TEST_PROJECT);
-
-        try (PDDocument document = Loader.loadPDF(pdfFile)) {
-
-            PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
-
-            assertTrue(text.contains(
-                "Event Timeline & Class Progression"
-            ));
-
-            assertTrue(text.contains(
-                "CLASS_CREATED on class Student"
-            ));
-
-            assertTrue(text.contains(
-                "Class (Student) modified."
-            ));
-
-            assertTrue(text.contains("Compilation succeeded."));
-        }
-    }
-
-
-    @Test
-    void testPdfCreatesMultiplePages() throws Exception {
+    void testPdfDoesNotExceedTwoPages() throws Exception {
 
         PdfExporter exporter = new PdfExporter();
 
         List<TelemetryEvent> events = new ArrayList<>();
 
-        // Create enough events to require more than one page
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < 100; i++) {
             events.add(
                 new EditorInteractionEvent("INSERT_" + i)
             );
@@ -241,16 +204,69 @@ public class TelemetryExporterTest {
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
 
-            // Verify that multiple pages were created
-            assertTrue(document.getNumberOfPages() > 1);
+            assertEquals(2, document.getNumberOfPages());
 
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
 
-            // Verify events from the beginning and end exist
-            assertTrue(text.contains("INSERT_0"));
-            assertTrue(text.contains("INSERT_59"));
+            assertTrue(text.contains("Session Summary Metrics"));
+            assertTrue(text.contains("Compilation Error Breakdown"));
+            assertTrue(text.contains("Class Creation Timeline"));
         }
     }
 
+    @Test
+    void testPdfContainsClassCreationTimeline() throws Exception {
+
+        PdfExporter exporter = new PdfExporter();
+
+        List<TelemetryEvent> events = new ArrayList<>();
+
+        events.add(LifecycleEvent.classCreated("Student"));
+        events.add(CompilationEvent.successfulCompilation());
+
+        exporter.export(events, TEST_PROJECT);
+
+        try (PDDocument document = Loader.loadPDF(pdfFile)) {
+
+            assertEquals(2, document.getNumberOfPages());
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+
+            assertTrue(text.contains("Class Creation Timeline"));
+            assertTrue(text.contains("CLASS_CREATED on class Student"));
+        }
+    }
+
+    @Test
+    void testJsonContainsCompilationIntervals() throws Exception {
+
+        JsonExporter exporter = new JsonExporter();
+
+        List<TelemetryEvent> events = new ArrayList<>();
+
+        events.add(CompilationEvent.successfulCompilation());
+
+        events.add(CompilationEvent.failedCompilation(
+            "COMPILE_ATTEMPT_FAILED",
+            "Compilation failed",
+            -1
+        ));
+
+        exporter.export(events, TEST_PROJECT);
+
+        String content = Files.readString(jsonFile.toPath());
+
+        JsonObject root = JsonParser
+            .parseString(content)
+            .getAsJsonObject();
+
+        assertTrue(root.has("compilationIntervalsSeconds"));
+
+        assertEquals(
+            1,
+            root.getAsJsonArray("compilationIntervalsSeconds").size()
+        );
+    }
 }

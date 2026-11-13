@@ -55,7 +55,7 @@ public class CompilationListenerTest {
         
         CompilationEvent capturedEvent = (CompilationEvent) events.get(0);
         assertFalse(capturedEvent.isSuccess());
-        assertEquals("ERR_SYNTAX", capturedEvent.getErrorCode());
+        assertEquals("COMPILER_ERROR", capturedEvent.getErrorCode());
         assertEquals("missing ';' at end of declaration", capturedEvent.getErrorMessage());
         assertEquals(25, capturedEvent.getAffectedLineNumber());
     }

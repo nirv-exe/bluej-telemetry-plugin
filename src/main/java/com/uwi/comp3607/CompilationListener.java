@@ -32,7 +32,7 @@ public class CompilationListener implements CompileListener{
 
     @Override
     public void compileError(CompileEvent event) {
-        String errorCode = "ERR_SYNTAX";
+        String errorCode = "COMPILER_ERROR";
         String errorMessage = event.getErrorMessage();
         int lineNum = event.getErrorLineNumber();
 
