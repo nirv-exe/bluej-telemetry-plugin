@@ -37,11 +37,27 @@
       <artifactId>bluej-ext</artifactId>
       <version>5.0</version>
     </dependency>
+
+    <!-- Mockito Config for mock objects when testing -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>5.11.0</version>
       <scope>test</scope>
+    </dependency>
+
+    <!-- Gson: Converts Java objects to JSON text -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.15.0</version>
+    </dependency>
+
+    <!-- Apache PDFBox: Creates and draws PDF files -->
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>3.0.7</version>
     </dependency>
   </dependencies>
 
