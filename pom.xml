@@ -59,6 +59,14 @@
       <artifactId>pdfbox</artifactId>
       <version>3.0.7</version>
     </dependency>
+
+    <!-- Required to resolve BlueJ UI class signatures during Mockito inspection -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>21.0.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
