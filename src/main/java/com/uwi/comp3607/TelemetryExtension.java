@@ -3,6 +3,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import bluej.extensions2.BlueJ; // BlueJ API Libraries
 import bluej.extensions2.Extension;
@@ -38,6 +40,12 @@ public class TelemetryExtension extends Extension
         this.projectListener = lifeCycleTracker;
 
         bluej.addPackageListener(lifeCycleTracker);
+        
+        List<TelemetryExporter> exporters = new ArrayList<>();
+        exporters.add(new JsonExporter());
+        exporters.add(new PdfExporter());
+        bluej.addPackageListener(new ExportPackageListener(storage, exporters));
+
         bluej.addCompileListener(new CompilationListener(storage));
         bluej.addCompileListener(new CompileListener() {
             @Override

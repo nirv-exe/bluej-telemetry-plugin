@@ -19,4 +19,6 @@ public abstract class TelemetryEvent {
     public String getEventType() {
         return eventType;
     }
+
+    public abstract String output();
 }

@@ -29,4 +29,12 @@ public class CompilationEvent extends TelemetryEvent{
     public String getErrorCode() { return errorCode; }
     public String getErrorMessage() { return errorMessage; }
     public int getAffectedLineNumber() { return affectedLineNumber; }
+
+    @Override
+    public String output() {
+        if (success) {
+            return "Compilation succeeded.";
+        }
+        return "Compilation failed [" + errorCode + "] at line " + affectedLineNumber + ": " + errorMessage;
+    }
 }
