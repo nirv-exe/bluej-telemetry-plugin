@@ -14,8 +14,10 @@ public class EditorRegistrationListener implements PackageListener {
 
     private final TelemetryStorage storage;
 
-    private final Map<JavaEditor, EditorActivityTracker> trackedEditors =
-            new IdentityHashMap<>();
+    private static final String REGISTRATION_KEY = "com.uwi.comp3607.telemetry.documentListener";
+    private final Map<JavaEditor, EditorDocumentListener> registeredListeners = new IdentityHashMap<>();
+
+    private final Map<JavaEditor, EditorActivityTracker> trackedEditors = new IdentityHashMap<>();
 
     private BPackage activePackage;
 
@@ -33,7 +35,21 @@ public class EditorRegistrationListener implements PackageListener {
 
     @Override
     public void packageClosing(PackageEvent event) {
+        for (Map.Entry<JavaEditor, EditorDocumentListener> entry: registeredListeners.entrySet()) {
+            try {
+                JavaEditor editor = entry.getKey();
+                EditorDocumentListener listener = entry.getValue();
 
+                editor.removeDocumentListener(listener);
+                editor.setProperty(REGISTRATION_KEY, null);
+
+            } catch (Exception e) {
+                System.out.println("Editor cleanup failed: " + e.getMessage());
+            }
+        }
+
+        registeredListeners.clear();
+        trackedEditors.clear();
         activePackage = null;
     }
 
@@ -57,16 +73,22 @@ public class EditorRegistrationListener implements PackageListener {
         try {
             JavaEditor editor = bClass.getJavaEditor();
 
-            if (editor == null || trackedEditors.containsKey(editor)) {
+            if (editor == null) {
+                return;
+            }
+
+            if (trackedEditors.containsKey(editor) ||
+                editor.getProperty(REGISTRATION_KEY) != null) {
                 return;
             }
 
             EditorActivityTracker tracker = new EditorActivityTracker();
-            EditorDocumentListener listener =
-                    new EditorDocumentListener(tracker, storage);
+            EditorDocumentListener listener = new EditorDocumentListener(tracker, storage);
 
             editor.addDocumentListener(listener);
+            editor.setProperty(REGISTRATION_KEY, listener);
             trackedEditors.put(editor, tracker);
+            registeredListeners.put(editor, listener);
 
             System.out.println("Editor tracking registered: "
                     + bClass.getName());

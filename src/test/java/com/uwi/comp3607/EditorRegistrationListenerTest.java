@@ -1,16 +1,23 @@
 package com.uwi.comp3607;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import bluej.extensions2.BClass;
 import bluej.extensions2.BPackage;
 import bluej.extensions2.editor.JavaEditor;
 import bluej.extensions2.event.PackageEvent;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 public class EditorRegistrationListenerTest {
 
@@ -121,5 +128,53 @@ public class EditorRegistrationListenerTest {
 
         verify(firstEditor, times(1)).addDocumentListener(any(EditorDocumentListener.class));
         verify(secondEditor, times(1)).addDocumentListener(any(EditorDocumentListener.class));
-}
+    }
+
+
+    
+    @Test
+    public void testDifferentProxiesDoNotRegisterSameEditorTwice() throws Exception {
+        JavaEditor firstProxy = mock(JavaEditor.class);
+        JavaEditor secondProxy = mock(JavaEditor.class);
+
+        when(bPackage.getClasses())
+            .thenReturn(new BClass[]{bClass});
+
+        when(bClass.getJavaEditor())
+            .thenReturn(firstProxy, secondProxy);
+
+        // Simulate an editor that already has a listener
+        when(secondProxy.getProperty(anyString()))
+            .thenReturn(new Object());
+
+        registrationListener.packageOpened(packageEvent);
+        registrationListener.checkForEditors();
+
+        verify(firstProxy, times(1))
+            .addDocumentListener(any(EditorDocumentListener.class));
+
+        verify(secondProxy, never())
+            .addDocumentListener(any(EditorDocumentListener.class));
+
+        assertEquals(1, registrationListener.getTrackedEditors().size());
+    }
+
+    @Test
+    public void testEditorListenersRemovedWhenPackageCloses() throws Exception {
+        when(bPackage.getClasses())
+            .thenReturn(new BClass[]{bClass});
+
+        registrationListener.packageOpened(packageEvent);
+
+        registrationListener.packageClosing(packageEvent);
+
+        verify(editor, times(1))
+            .removeDocumentListener(
+                any(EditorDocumentListener.class)
+            );
+
+        assertTrue(
+            registrationListener.getTrackedEditors().isEmpty()
+        );
+    }
 }
