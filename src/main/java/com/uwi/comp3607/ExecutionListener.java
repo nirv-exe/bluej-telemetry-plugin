@@ -17,7 +17,7 @@ public class ExecutionListener implements InvocationFinishedListener{
         String methodName = event.getMethodName();
 
         if (methodName == null) {
-            methodName = "Constructor";
+            methodName = "Unknown";
         }
 
         String outputSummary = "Method: " + methodName;

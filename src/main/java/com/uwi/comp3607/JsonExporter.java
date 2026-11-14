@@ -3,6 +3,7 @@ package com.uwi.comp3607;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -55,7 +56,11 @@ public class JsonExporter implements TelemetryExporter {
         root.add("events", jsonArray);
 
 
-        String fileName = projectName + "_Telemetry.json";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS");
+
+        String sessionTimestamp = events.get(0).getTimestamp().format(formatter);
+
+        String fileName = projectName + "_" + sessionTimestamp + "_Telemetry.json";
 
         try (FileWriter writer = new FileWriter(fileName)) {
             gson.toJson(root, writer);
