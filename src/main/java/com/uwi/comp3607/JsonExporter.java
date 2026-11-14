@@ -13,6 +13,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class JsonExporter implements TelemetryExporter {
+    private String studentId = "STUDENT_PLACEHOLDER";
+
+    public void setStudentId(String studentId) {
+        if (studentId != null && !studentId.isBlank()) {
+            this.studentId = studentId.trim();
+        }
+    }
     @Override
     public void export(List<TelemetryEvent> events, String projectName, File outputDirectory) {
         if (events == null || events.isEmpty()) {
@@ -24,7 +31,7 @@ public class JsonExporter implements TelemetryExporter {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         JsonObject root = new JsonObject();
-        root.addProperty("studentId", "STUDENT_PLACEHOLDER");
+        root.addProperty("studentId", studentId);
         root.addProperty("projectName", projectName);
         root.addProperty("totalSessionDurationSeconds", summary.getTotalSessionSeconds());
         root.addProperty("activeCodingTimeSeconds", summary.getActiveTimeSeconds());

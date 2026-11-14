@@ -3,13 +3,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import bluej.extensions2.BPackage;
 import bluej.extensions2.BlueJ;
 import bluej.extensions2.Extension;
+import bluej.extensions2.MenuGenerator;
 import bluej.extensions2.event.ClassListener;
 import bluej.extensions2.event.CompileEvent;
 import bluej.extensions2.event.CompileListener;
 import bluej.extensions2.event.InvocationFinishedListener;
 import bluej.extensions2.event.PackageListener;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextInputDialog;
 
 public class TelemetryExtension extends Extension
 {
@@ -35,9 +39,56 @@ public class TelemetryExtension extends Extension
         editorRegistrationListener = new EditorRegistrationListener(storage);
 
         List<TelemetryExporter> exporters = new ArrayList<>();
-        exporters.add(new JsonExporter());
+        
+        JsonExporter jsonExporter = new JsonExporter();
+        
+        jsonExporter.setStudentId(
+            bluej.getExtensionPropertyString("studentId", "")
+        );
+
+        exporters.add(jsonExporter);
         exporters.add(new PdfExporter());
-        this.exportListener = new ExportPackageListener(storage, exporters);
+
+        // Add the Student ID option to BlueJ's Tools menu
+        bluej.setMenuGenerator(new MenuGenerator() {
+
+            @Override
+            public MenuItem getToolsMenuItem(BPackage pkg) {
+
+                MenuItem item = new MenuItem("Set Student ID");
+
+                item.setOnAction(e -> {
+
+                    String currentId =
+                        bluej.getExtensionPropertyString("studentId", "");
+
+                    TextInputDialog dialog =
+                        new TextInputDialog(currentId);
+
+                    dialog.setTitle("Telemetry Plugin");
+                    dialog.setHeaderText("Student Information");
+                    dialog.setContentText("Enter your Student ID:");
+
+                    dialog.showAndWait().ifPresent(input -> {
+
+                        String id = input.trim();
+
+                        if (!id.isEmpty()) {
+                            jsonExporter.setStudentId(id);
+                            bluej.setExtensionPropertyString(
+                                "studentId", id
+                            );
+                        }
+                    });
+                });
+
+                return item;
+            }
+        });
+
+        this.exportListener =
+            new ExportPackageListener(storage, exporters);
+
         
         bluej.addPackageListener(lifeCycleTracker);
         bluej.addPackageListener(editorRegistrationListener);
