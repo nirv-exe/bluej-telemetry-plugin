@@ -1,5 +1,6 @@
 package com.uwi.comp3607;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -13,7 +14,7 @@ import com.google.gson.JsonObject;
 
 public class JsonExporter implements TelemetryExporter {
     @Override
-    public void export(List<TelemetryEvent> events, String projectName) {
+    public void export(List<TelemetryEvent> events, String projectName, File outputDirectory) {
         if (events == null || events.isEmpty()) {
             return;
         }
@@ -62,7 +63,9 @@ public class JsonExporter implements TelemetryExporter {
 
         String fileName = projectName + "_" + sessionTimestamp + "_Telemetry.json";
 
-        try (FileWriter writer = new FileWriter(fileName)) {
+        File outputFile = new File(outputDirectory, fileName);
+
+        try (FileWriter writer = new FileWriter(outputFile)) {
             gson.toJson(root, writer);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to export JSON telemetry", e);

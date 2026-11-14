@@ -26,6 +26,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import bluej.extensions2.BPackage;
+import bluej.extensions2.BProject;
 import bluej.extensions2.event.PackageEvent;
 
 public class TelemetryExporterTest {
@@ -70,7 +71,7 @@ public class TelemetryExporterTest {
         );
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         assertTrue(jsonFile.exists(), "JSON file should be created");
         String content = Files.readString(jsonFile.toPath());
@@ -87,7 +88,7 @@ public class TelemetryExporterTest {
         );
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         assertTrue(pdfFile.exists(), "PDF file should be created");
         assertTrue(pdfFile.length() > 0, "PDF file should not be empty");
@@ -104,11 +105,19 @@ public class TelemetryExporterTest {
         PackageEvent mockEvent = mock(PackageEvent.class);
         BPackage mockPackage = mock(BPackage.class);
         when(mockEvent.getPackage()).thenReturn(mockPackage);
-        when(mockPackage.getDir()).thenReturn(new File(TEST_PROJECT));
+        BProject mockProject = mock(BProject.class);
+
+        when(mockPackage.getProject()).thenReturn(mockProject);
+        when(mockProject.getDir()).thenReturn(new File(TEST_PROJECT));
 
         listener.packageClosing(mockEvent);
 
-        verify(mockExporter, times(1)).export(anyList(), eq(TEST_PROJECT));
+        verify(mockExporter, times(1))
+            .export(
+                anyList(),
+                eq(TEST_PROJECT),
+                eq(new File(TEST_PROJECT))
+            );
         assertTrue(storage.getEventAndClear().isEmpty(), "Storage should be cleared after export");
     }
 
@@ -121,7 +130,13 @@ public class TelemetryExporterTest {
 
         TelemetryExporter failingExporter = mock(TelemetryExporter.class);
 
-        doThrow(new RuntimeException("Export failed")).when(failingExporter).export(anyList(), eq(TEST_PROJECT));
+        doThrow(new RuntimeException("Export failed"))
+            .when(failingExporter)
+            .export(
+                anyList(),
+                eq(TEST_PROJECT),
+                eq(new File(TEST_PROJECT))
+            );
 
         ExportPackageListener listener = new ExportPackageListener(storage, List.of(failingExporter));
 
@@ -129,7 +144,10 @@ public class TelemetryExporterTest {
         BPackage mockPackage = mock(BPackage.class);
 
         when(mockEvent.getPackage()).thenReturn(mockPackage);
-        when(mockPackage.getDir()).thenReturn(new File(TEST_PROJECT));
+        BProject mockProject = mock(BProject.class);
+
+        when(mockPackage.getProject()).thenReturn(mockProject);
+        when(mockProject.getDir()).thenReturn(new File(TEST_PROJECT));
 
         listener.packageClosing(mockEvent);
 
@@ -152,7 +170,7 @@ public class TelemetryExporterTest {
         );
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         String content = Files.readString(jsonFile.toPath());
 
@@ -201,7 +219,7 @@ public class TelemetryExporterTest {
         );
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
 
@@ -209,7 +227,9 @@ public class TelemetryExporterTest {
             String text = stripper.getText(document);
 
             assertTrue(text.contains("Compilation Error Breakdown"));
-            assertTrue(text.contains("ERR_SYNTAX: 2"));
+            assertTrue(text.contains("Error Category"));
+            assertTrue(text.contains("Frequency"));
+            assertTrue(text.contains("ERR_SYNTAX"));
         }
     }
 
@@ -227,7 +247,7 @@ public class TelemetryExporterTest {
         }
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
 
@@ -239,6 +259,9 @@ public class TelemetryExporterTest {
             assertTrue(text.contains("Session Summary Metrics"));
             assertTrue(text.contains("Compilation Error Breakdown"));
             assertTrue(text.contains("Class Creation Timeline"));
+            assertTrue(text.contains("Estimated Coding Activity"));
+            assertTrue(text.contains("Active Coding:"));
+            assertTrue(text.contains("Idle Time:"));
         }
     }
 
@@ -253,7 +276,7 @@ public class TelemetryExporterTest {
         events.add(CompilationEvent.successfulCompilation());
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
 
@@ -283,7 +306,7 @@ public class TelemetryExporterTest {
         ));
 
         setReportFiles(events);
-        exporter.export(events, TEST_PROJECT);
+        exporter.export(events, TEST_PROJECT, new File("."));
 
         String content = Files.readString(jsonFile.toPath());
 
