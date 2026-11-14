@@ -73,7 +73,7 @@ This command will:
 2. Run the JUnit tests.
 3. Package the extension and its required libraries into a JAR file.
 
-**Important:** If there are errors and Maven reports that it cannot resolve the dependancies, see [Step 3](#step-3-resolve-bluej-dependency-issues-if-necessary)
+**Important:** If there are errors and Maven reports that it cannot resolve the dependancies, see [Step 3](#step-3---resolve-bluej-dependency-issues-if-necessary)
 
 After a successful build, the generated JAR can be found at:
 
