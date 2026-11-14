@@ -22,7 +22,12 @@ public class PdfExporter implements TelemetryExporter {
         }
 
         TelemetryReportAggregator summary = new TelemetryReportAggregator(events);
-        String fileName = projectName + "_Telemetry.pdf";
+        DateTimeFormatter filenameFormatter =
+        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS");
+
+        String sessionTimestamp = events.get(0).getTimestamp().format(filenameFormatter);
+
+        String fileName = projectName + "_" + sessionTimestamp + "_Telemetry.pdf";
 
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage();

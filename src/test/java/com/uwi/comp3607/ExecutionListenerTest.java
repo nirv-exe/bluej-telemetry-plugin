@@ -87,4 +87,30 @@ public class ExecutionListenerTest {
 
         assertFalse(capturedEvent.getSuccess());
     }
+
+    @Test
+    public void testExceptionWithUnknownMethod() {
+
+        InvocationFinishedEvent mockEvent =
+            mock(InvocationFinishedEvent.class);
+
+        when(mockEvent.getEventType()).thenReturn(
+            InvocationFinishedEvent.EventType.EXCEPTION_EXIT
+        );
+
+        when(mockEvent.getMethodName()).thenReturn(null);
+        when(mockEvent.getClassName()).thenReturn("Calculator");
+
+        listener.invocationFinished(mockEvent);
+
+        List<TelemetryEvent> events = storage.getEventAndClear();
+
+        ExecutionEvent capturedEvent =
+            (ExecutionEvent) events.get(0);
+
+        assertEquals(
+            "Runtime exception in class Calculator, method Unknown",
+            capturedEvent.getExceptionThrown()
+        );
+    }
 }

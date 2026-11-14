@@ -2,6 +2,7 @@ package com.uwi.comp3607;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,15 +29,36 @@ import bluej.extensions2.BPackage;
 import bluej.extensions2.event.PackageEvent;
 
 public class TelemetryExporterTest {
-
     private static final String TEST_PROJECT = "TestProject";
-    private final File jsonFile = new File(TEST_PROJECT + "_Telemetry.json");
-    private final File pdfFile = new File(TEST_PROJECT + "_Telemetry.pdf");
+    private File jsonFile;
+    private File pdfFile;
+
+    private void setReportFiles(List<TelemetryEvent> events) {
+
+        DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS");
+
+        String timestamp =
+            events.get(0).getTimestamp().format(formatter);
+
+        jsonFile = new File(
+            TEST_PROJECT + "_" + timestamp + "_Telemetry.json"
+        );
+
+        pdfFile = new File(
+            TEST_PROJECT + "_" + timestamp + "_Telemetry.pdf"
+        );
+    }
 
     @AfterEach
     void tearDown() {
-        if (jsonFile.exists()) jsonFile.delete();
-        if (pdfFile.exists()) pdfFile.delete();
+        if (jsonFile != null && jsonFile.exists()) {
+            jsonFile.delete();
+        }
+
+        if (pdfFile != null && pdfFile.exists()) {
+            pdfFile.delete();
+        }
     }
 
     @Test
@@ -47,6 +69,7 @@ public class TelemetryExporterTest {
             LifecycleEvent.classCreated("Student")
         );
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         assertTrue(jsonFile.exists(), "JSON file should be created");
@@ -63,6 +86,7 @@ public class TelemetryExporterTest {
             new EditorInteractionEvent("INSERT")
         );
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         assertTrue(pdfFile.exists(), "PDF file should be created");
@@ -127,6 +151,7 @@ public class TelemetryExporterTest {
             )
         );
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         String content = Files.readString(jsonFile.toPath());
@@ -175,6 +200,7 @@ public class TelemetryExporterTest {
             )
         );
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
@@ -200,6 +226,7 @@ public class TelemetryExporterTest {
             );
         }
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
@@ -225,6 +252,7 @@ public class TelemetryExporterTest {
         events.add(LifecycleEvent.classCreated("Student"));
         events.add(CompilationEvent.successfulCompilation());
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         try (PDDocument document = Loader.loadPDF(pdfFile)) {
@@ -254,6 +282,7 @@ public class TelemetryExporterTest {
             -1
         ));
 
+        setReportFiles(events);
         exporter.export(events, TEST_PROJECT);
 
         String content = Files.readString(jsonFile.toPath());
