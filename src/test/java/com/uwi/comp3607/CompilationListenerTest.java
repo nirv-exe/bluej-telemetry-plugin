@@ -27,6 +27,8 @@ public class CompilationListenerTest {
         // Arrange
         CompileEvent mockEvent = mock(CompileEvent.class);
 
+        when(mockEvent.isUserGeneratedCompilation()).thenReturn(true);
+
         // Act
         listener.compileSucceeded(mockEvent);
 
@@ -43,6 +45,7 @@ public class CompilationListenerTest {
     public void testCompileError() {
         // Arrange
         CompileEvent mockEvent = mock(CompileEvent.class);
+        when(mockEvent.isUserGeneratedCompilation()).thenReturn(true);
         when(mockEvent.getErrorMessage()).thenReturn("missing ';' at end of declaration");
         when(mockEvent.getErrorLineNumber()).thenReturn(25);
 
@@ -65,6 +68,7 @@ public class CompilationListenerTest {
         // Arrange
         CompileEvent mockEvent = mock(CompileEvent.class);
 
+        when(mockEvent.isUserGeneratedCompilation()).thenReturn(true);
         // Act
         listener.compileFailed(mockEvent);
 
@@ -75,5 +79,20 @@ public class CompilationListenerTest {
         CompilationEvent capturedEvent = (CompilationEvent) events.get(0);
         assertFalse(capturedEvent.isSuccess());
         assertEquals("COMPILE_ATTEMPT_FAILED", capturedEvent.getErrorCode());
+    }
+
+    @Test
+    public void testAutomaticCompilationIsIgnored() {
+
+        CompileEvent mockEvent = mock(CompileEvent.class);
+
+        when(mockEvent.isUserGeneratedCompilation())
+            .thenReturn(false);
+
+        listener.compileSucceeded(mockEvent);
+        listener.compileFailed(mockEvent);
+        listener.compileError(mockEvent);
+
+        assertEquals(0, storage.getEventAndClear().size());
     }
 }
