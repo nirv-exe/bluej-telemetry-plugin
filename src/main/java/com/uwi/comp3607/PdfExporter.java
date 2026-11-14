@@ -1,5 +1,7 @@
 package com.uwi.comp3607;
 
+import java.awt.Color;
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +18,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 public class PdfExporter implements TelemetryExporter {
 
     @Override
-    public void export(List<TelemetryEvent> events, String projectName) {
+    public void export(List<TelemetryEvent> events, String projectName, File outputDirectory) {
         if (events == null || events.isEmpty()) {
             return;
         }
@@ -56,15 +58,58 @@ public class PdfExporter implements TelemetryExporter {
                 contentStream.showText("Active Coding Time: " + summary.getActiveTimeSeconds() + "s | Idle Time: " + summary.getIdleTimeSeconds() + "s");
                 contentStream.newLine();
                 contentStream.showText(String.format("Compilation Attempts: %d | Success Rate: %.1f%% | Compilation Errors Logged: %d", summary.getTotalCompilations(), summary.getCompileSuccessRate(), summary.getCompilationErrors()));
-                contentStream.newLine();
-                contentStream.newLine();
+                contentStream.endText();
 
-
+                // Active vs. Idle Time Chart
+                contentStream.beginText();
                 contentStream.setFont(titleFont, 11);
-                contentStream.showText("Compilation Error Breakdown");
-                contentStream.newLine();
+                contentStream.newLineAtOffset(50, 630);
+                contentStream.showText("Estimated Coding Activity");
+                contentStream.endText();
 
+                long activeSeconds = summary.getActiveTimeSeconds();
+                long idleSeconds = summary.getIdleTimeSeconds();
+
+                // Use the longest time as the scale
+                long longestTime = Math.max(1, Math.max(activeSeconds, idleSeconds));
+
+                float activeWidth = 300f * activeSeconds / longestTime;
+                float idleWidth = 300f * idleSeconds / longestTime;
+
+                // Active coding label
+                contentStream.beginText();
                 contentStream.setFont(bodyFont, 10);
+                contentStream.newLineAtOffset(50, 605);
+                contentStream.showText("Active Coding: " + activeSeconds + "s");
+                contentStream.endText();
+
+                // Blue bar for active coding
+                contentStream.setNonStrokingColor(new Color(60, 120, 200));
+                contentStream.addRect(50, 585, activeWidth, 12);
+                contentStream.fill();
+
+                // Idle time label
+                contentStream.beginText();
+                contentStream.setFont(bodyFont, 10);
+                contentStream.newLineAtOffset(50, 555);
+                contentStream.showText("Idle Time: " + idleSeconds + "s");
+                contentStream.endText();
+
+                // Gray bar for idle time
+                contentStream.setNonStrokingColor(new Color(180, 180, 180));
+                contentStream.addRect(50, 535, idleWidth, 12);
+                contentStream.fill();
+
+                // Reset drawing color to black
+                contentStream.setNonStrokingColor(Color.BLACK);
+
+                // Continue with compilation errors
+                contentStream.beginText();
+                contentStream.setFont(titleFont, 11);
+                contentStream.setLeading(14.5f);
+                contentStream.newLineAtOffset(50, 490);
+                contentStream.showText("Compilation Error Breakdown");
+                contentStream.endText();
 
                 Map<String, Integer> errorCounts = new HashMap<>();
 
@@ -84,19 +129,103 @@ public class PdfExporter implements TelemetryExporter {
                     }
                 }
 
+                // Table dimensions
+                float tableX = 50;
+                float tableTop = 465;
+                float tableWidth = 500;
+                float columnX = 405;
+                float rowHeight = 22;
+
+                // Limit displayed categories to fit on page 1
+                int rows = Math.min(8, Math.max(1, errorCounts.size()));
+                float tableHeight = (rows + 1) * rowHeight;
+
+                // Draw table border
+                contentStream.setStrokingColor(Color.BLACK);
+                contentStream.addRect(
+                    tableX, tableTop - tableHeight,
+                    tableWidth, tableHeight
+                );
+
+                // Draw vertical column divider
+                contentStream.moveTo(columnX, tableTop);
+                contentStream.lineTo(columnX, tableTop - tableHeight);
+
+                // Draw horizontal row dividers
+                for (int i = 1; i <= rows; i++) {
+                    float y = tableTop - i * rowHeight;
+
+                    contentStream.moveTo(tableX, y);
+                    contentStream.lineTo(tableX + tableWidth, y);
+                }
+
+                contentStream.stroke();
+
+                // Table headings
+                contentStream.beginText();
+                contentStream.setFont(titleFont, 10);
+                contentStream.newLineAtOffset(58, tableTop - 15);
+                contentStream.showText("Error Category");
+                contentStream.endText();
+
+                contentStream.beginText();
+                contentStream.setFont(titleFont, 10);
+                contentStream.newLineAtOffset(columnX + 10, tableTop - 15);
+                contentStream.showText("Frequency");
+                contentStream.endText();
+
+                // Table data
+                int rowNumber = 0;
+
                 if (errorCounts.isEmpty()) {
+
+                    contentStream.beginText();
+                    contentStream.setFont(bodyFont, 10);
+                    contentStream.newLineAtOffset(58, tableTop - 37);
                     contentStream.showText("No compilation errors recorded.");
-                    contentStream.newLine();
+                    contentStream.endText();
+
                 } else {
-                    for (String errorCode : errorCounts.keySet()) {
-                        contentStream.showText(errorCode + ": " + errorCounts.get(errorCode));
-                        contentStream.newLine();
+
+                    for (Map.Entry<String, Integer> entry
+                            : errorCounts.entrySet()) {
+
+                        if (rowNumber >= 8) {
+                            break;
+                        }
+
+                        float y = tableTop - (rowNumber + 1)
+                            * rowHeight - 15;
+
+                        contentStream.beginText();
+                        contentStream.setFont(bodyFont, 10);
+                        contentStream.newLineAtOffset(58, y);
+                        contentStream.showText(entry.getKey());
+                        contentStream.endText();
+
+                        contentStream.beginText();
+                        contentStream.setFont(bodyFont, 10);
+                        contentStream.newLineAtOffset(columnX + 10, y);
+                        contentStream.showText(entry.getValue().toString());
+                        contentStream.endText();
+
+                        rowNumber++;
                     }
                 }
 
-                contentStream.newLine();
+                // Explain if some categories could not fit
+                if (errorCounts.size() > 8) {
 
-                contentStream.endText();
+                    contentStream.beginText();
+                    contentStream.setFont(bodyFont, 9);
+                    contentStream.newLineAtOffset(
+                        50, tableTop - tableHeight - 20
+                    );
+                    contentStream.showText(
+                        "Additional error categories are available in the JSON report."
+                    );
+                    contentStream.endText();
+                }
                 contentStream.close();
 
                 // Create the second and final page
@@ -160,7 +289,9 @@ public class PdfExporter implements TelemetryExporter {
                 contentStream.close();
             }
 
-            document.save(fileName);
+            File outputFile = new File(outputDirectory, fileName);
+
+            document.save(outputFile);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to export PDF telemetry", e);
         }

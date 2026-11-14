@@ -1,6 +1,6 @@
 package com.uwi.comp3607;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 import bluej.extensions2.BPackage;
@@ -23,13 +23,19 @@ public class ExportPackageListener implements PackageListener {
     @Override
     public void packageClosing(PackageEvent event) {
         String projectName = "BlueJProject";
+        File projectDirectory;
         try {
             BPackage pkg = event.getPackage();
-            if (pkg != null && pkg.getDir() != null) {
-                projectName = pkg.getDir().getName();
-            }
+
+            projectDirectory = pkg.getProject().getDir();
+            projectName = projectDirectory.getName();
+
         } catch (Exception e) {
-            System.out.println("Could not resolve project name.");
+            System.out.println(
+                "Could not locate BlueJ project folder: "
+                + e.getMessage()
+            );
+            return;
         }
 
         List<TelemetryEvent> sessionEvents = storage.getEvents();
@@ -40,7 +46,7 @@ public class ExportPackageListener implements PackageListener {
 
         try {
             for (TelemetryExporter exporter : exporters) {
-                exporter.export(sessionEvents, projectName);
+                exporter.export(sessionEvents, projectName, projectDirectory);
             }
 
             // Clear only after every exporter succeeds
