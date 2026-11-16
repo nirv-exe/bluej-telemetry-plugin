@@ -15,8 +15,31 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
+/**
+ * Writes a two-page PDF telemetry report with aggregate metrics, estimated
+ * active and idle time bars, compilation-error category counts, and a class
+ * creation timeline. The fixed layout displays at most eight error categories
+ * and twelve class creation events without adding overflow pages.
+ */
 public class PdfExporter implements TelemetryExporter {
 
+    /**
+     * Generates a timestamped PDF report from the supplied event sequence.
+     * A {@code null} or empty list produces no file. Error categories come from event
+     * details, defaulting to {@code UNKNOWN} when absent, and have no defined display
+     * order. The timeline follows input order and truncates descriptions longer than
+     * 55 characters. The destination directory must already exist; a matching
+     * filename is overwritten.
+     *
+     * @param events the events in reporting order, containing non-null entries;
+     *         editor-interaction timestamps must be nondecreasing; may be {@code null}
+     * @param projectName the project label for the report heading and filename
+     * @param outputDirectory the destination directory for the PDF file
+     * @throws UncheckedIOException if PDF creation, writing, or resource closing fails
+     *         due to an I/O error
+     * @throws IllegalArgumentException if editor-interaction timestamps are out of order
+     *         or report text contains characters unsupported by the selected PDF fonts
+     */
     @Override
     public void export(List<TelemetryEvent> events, String projectName, File outputDirectory) {
         if (events == null || events.isEmpty()) {

@@ -12,14 +12,41 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+/**
+ * Writes a pretty-printed JSON telemetry report containing the configured student
+ * identifier, project name, aggregate metrics, and each event's description and
+ * structured details. Report filenames use the first event's timestamp.
+ */
 public class JsonExporter implements TelemetryExporter {
+    /**
+     * Student identifier included in JSON reports; defaults to {@code STUDENT_PLACEHOLDER}.
+     */
     private String studentId = "STUDENT_PLACEHOLDER";
 
+    /**
+     * Updates the report identifier with a trimmed, nonblank value.
+     * A {@code null} or blank argument leaves the current identifier unchanged.
+     *
+     * @param studentId the student identifier to use for subsequent JSON reports
+     */
     public void setStudentId(String studentId) {
         if (studentId != null && !studentId.isBlank()) {
             this.studentId = studentId.trim();
         }
     }
+    /**
+     * Writes session metrics and event objects to a timestamped JSON file.
+     * Each event includes its category, timestamp, description, and any additional
+     * properties supplied by the event. A {@code null} or empty list produces no file.
+     * The destination directory must already exist; a matching filename is overwritten.
+     *
+     * @param events the events in reporting order, containing non-null entries;
+     *         editor-interaction timestamps must be nondecreasing; may be {@code null}
+     * @param projectName the project label for the JSON content and filename
+     * @param outputDirectory the destination directory for the JSON file
+     * @throws UncheckedIOException if opening, writing, or closing the report fails
+     * @throws IllegalArgumentException if editor-interaction timestamps are out of order
+     */
     @Override
     public void export(List<TelemetryEvent> events, String projectName, File outputDirectory) {
         if (events == null || events.isEmpty()) {
